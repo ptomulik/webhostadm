@@ -1,0 +1,47 @@
+#! /bin/sh
+
+set -e
+
+WHA_SCRIPT_DIR=`dirname $0`;
+WHA_SCRIPT_DIR=`(cd ${WHA_SCRIPT_DIR} && pwd)`;
+WHA_SCRIPT_BASENAME=`basename $0`;
+WHA_SCRIPT_ABSNAME="${WHA_SCRIPT_DIR}/${WHA_SCRIPT_BASENAME}";
+
+#
+# Learn where things are installed.
+#
+. ${WHA_SCRIPT_DIR}/webhostadm-paths
+#
+# Include configuration file.
+#
+. ${WHA_CONF_DIR}/webhostadm.conf
+# 
+# Include libraries
+#
+. ${WHA_PKGDATA_DIR}/dialogs.sh
+
+test -x ${DIALOG} \
+  || { echo "error: 'dialog' does not exist or is not executable" >&2; \
+       exit 1; }
+
+test -x ${MKTEPM} \
+  || { echo "error: 'mktemp' does not exist or is not executable" >&2; \
+       exit 1; }
+
+WHA_DLG_TMP=`${MKTEMP} ${WHA_TMPDIR}/webhostadmin.XXXX` ;
+exec 8< "${WHA_DLG_TMP}"
+exec 9> "${WHA_DLG_TMP}"
+
+status=0
+wha_dlg_reconfigure_main || status=$?
+case $status in 
+  0) 
+    ;;
+  1)
+    ;;
+  *) exit $status;
+esac
+
+exec 8<&-
+exec 9>&-
+rm -f ${WHA_DLG_TMP}
